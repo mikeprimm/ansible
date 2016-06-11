@@ -152,9 +152,12 @@ class Facts(object):
                  { 'path' : '/usr/local/sbin/pkg',  'name' : 'pkgng' },
     ]
 
-    def __init__(self, load_on_init=True):
+    def __init__(self, load_on_init=True, cached_facts=None):
 
-        self.facts = {}
+        if not cached_facts:
+            self.facts = {}
+        else:
+            self.facts = cached_facts
 
         if load_on_init:
             self.get_platform_facts()
@@ -803,9 +806,6 @@ class Hardware(Facts):
                 subclass = sc
         return super(cls, subclass).__new__(subclass, *arguments, **keyword)
 
-    def __init__(self):
-        Facts.__init__(self)
-
     def populate(self):
         return self.facts
 
@@ -829,9 +829,6 @@ class LinuxHardware(Hardware):
     ORIGINAL_MEMORY_FACTS = frozenset(('MemTotal', 'SwapTotal', 'MemFree', 'SwapFree'))
     # Now we have all of these in a dict structure
     MEMORY_FACTS = ORIGINAL_MEMORY_FACTS.union(('Buffers', 'Cached', 'SwapCached'))
-
-    def __init__(self):
-        Hardware.__init__(self)
 
     def populate(self):
         self.get_cpu_facts()
@@ -1229,9 +1226,6 @@ class SunOSHardware(Hardware):
     """
     platform = 'SunOS'
 
-    def __init__(self):
-        Hardware.__init__(self)
-
     def populate(self):
         self.get_cpu_facts()
         self.get_memory_facts()
@@ -1326,9 +1320,6 @@ class OpenBSDHardware(Hardware):
     platform = 'OpenBSD'
     DMESG_BOOT = '/var/run/dmesg.boot'
 
-    def __init__(self):
-        Hardware.__init__(self)
-
     def populate(self):
         self.sysctl = self.get_sysctl()
         self.get_memory_facts()
@@ -1416,9 +1407,6 @@ class FreeBSDHardware(Hardware):
     """
     platform = 'FreeBSD'
     DMESG_BOOT = '/var/run/dmesg.boot'
-
-    def __init__(self):
-        Hardware.__init__(self)
 
     def populate(self):
         self.get_cpu_facts()
@@ -1548,9 +1536,6 @@ class NetBSDHardware(Hardware):
     platform = 'NetBSD'
     MEMORY_FACTS = ['MemTotal', 'SwapTotal', 'MemFree', 'SwapFree']
 
-    def __init__(self):
-        Hardware.__init__(self)
-
     def populate(self):
         self.get_cpu_facts()
         self.get_memory_facts()
@@ -1624,9 +1609,6 @@ class AIX(Hardware):
     - processor_count
     """
     platform = 'AIX'
-
-    def __init__(self):
-        Hardware.__init__(self)
 
     def populate(self):
         self.get_cpu_facts()
@@ -1705,9 +1687,6 @@ class HPUX(Hardware):
     """
 
     platform = 'HP-UX'
-
-    def __init__(self):
-        Hardware.__init__(self)
 
     def populate(self):
         self.get_cpu_facts()
@@ -1814,9 +1793,6 @@ class Darwin(Hardware):
     """
     platform = 'Darwin'
 
-    def __init__(self):
-        Hardware.__init__(self)
-
     def populate(self):
         self.sysctl = self.get_sysctl()
         self.get_mac_facts()
@@ -1896,9 +1872,9 @@ class Network(Facts):
                 subclass = sc
         return super(cls, subclass).__new__(subclass, *arguments, **keyword)
 
-    def __init__(self, module):
+    def __init__(self, module, load_on_init=True, cached_facts=None):
         self.module = module
-        Facts.__init__(self)
+        Facts.__init__(self, load_on_init=load_on_init, cached_facts=cached_facts)
 
     def populate(self):
         return self.facts
@@ -1912,9 +1888,6 @@ class LinuxNetwork(Network):
     - ipv4_address and ipv6_address: the first non-local address for each family.
     """
     platform = 'Linux'
-
-    def __init__(self, module):
-        Network.__init__(self, module)
 
     def populate(self):
         ip_path = self.module.get_bin_path('ip')
@@ -2142,9 +2115,6 @@ class GenericBsdIfconfigNetwork(Network):
     """
     platform = 'Generic_BSD_Ifconfig'
 
-    def __init__(self, module):
-        Network.__init__(self, module)
-
     def populate(self):
 
         ifconfig_path = module.get_bin_path('ifconfig')
@@ -2362,9 +2332,6 @@ class HPUXNetwork(Network):
     - interface_<name> dictionary of ipv4 address information.
     """
     platform = 'HP-UX'
-
-    def __init__(self, module):
-        Network.__init__(self, module)
 
     def populate(self):
         netstat_path = self.module.get_bin_path('netstat')
@@ -2665,9 +2632,6 @@ class Virtual(Facts):
                 subclass = sc
         return super(cls, subclass).__new__(subclass, *arguments, **keyword)
 
-    def __init__(self):
-        Facts.__init__(self)
-
     def populate(self):
         return self.facts
 
@@ -2678,9 +2642,6 @@ class LinuxVirtual(Virtual):
     - virtualization_role
     """
     platform = 'Linux'
-
-    def __init__(self):
-        Virtual.__init__(self)
 
     def populate(self):
         self.get_virtual_facts()
@@ -2848,9 +2809,6 @@ class FreeBSDVirtual(Virtual):
     """
     platform = 'FreeBSD'
 
-    def __init__(self):
-        Virtual.__init__(self)
-
     def populate(self):
         self.get_virtual_facts()
         return self.facts
@@ -2870,9 +2828,6 @@ class OpenBSDVirtual(Virtual):
     """
     platform = 'OpenBSD'
 
-    def __init__(self):
-        Virtual.__init__(self)
-
     def populate(self):
         self.get_virtual_facts()
         return self.facts
@@ -2888,9 +2843,6 @@ class HPUXVirtual(Virtual):
     - virtualization_role
     """
     platform = 'HP-UX'
-
-    def __init__(self):
-        Virtual.__init__(self)
 
     def populate(self):
         self.get_virtual_facts()
@@ -2928,9 +2880,6 @@ class SunOSVirtual(Virtual):
     - container
     """
     platform = 'SunOS'
-
-    def __init__(self):
-        Virtual.__init__(self)
 
     def populate(self):
         self.get_virtual_facts()
@@ -3026,9 +2975,9 @@ def get_file_lines(path):
 def ansible_facts(module):
     facts = {}
     facts.update(Facts().populate())
-    facts.update(Hardware().populate())
-    facts.update(Network(module).populate())
-    facts.update(Virtual().populate())
+    facts.update(Hardware(load_on_init=False, cached_facts=facts).populate())
+    facts.update(Network(module, load_on_init=False, cached_facts=facts).populate())
+    facts.update(Virtual(load_on_init=False, cached_facts=facts).populate())
     return facts
 
 # ===========================================
